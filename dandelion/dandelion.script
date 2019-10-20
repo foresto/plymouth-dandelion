@@ -56,7 +56,10 @@ window_height = Window.GetHeight();
 
 logo.image = Image("special://logo");
 logo.sprite = Sprite(logo.image);
+logo.sprite.SetX (Window.GetWidth()  / 2 - logo.image.GetWidth()  / 2);
+logo.sprite.SetY (Window.GetHeight() / 2 - logo.image.GetHeight() / 2);
 logo.sprite.SetZ (10000);
+under_logo_y = window_height / 2 + logo.image.GetHeight();
 
 stem.image = stem.origimage = Image("stem.png");
 stem.sprite = Sprite();
@@ -103,14 +106,6 @@ fun refresh (){
     rand++;
     down_draft = Math.Min(down_draft+1, 150);
     
-    if (status == "normal"){
-        logo.sprite.SetX (Window.GetWidth()  / 2 - logo.image.GetWidth()  / 2);     # Place in the middle of the screen
-        logo.sprite.SetY (Window.GetHeight() / 2 - logo.image.GetHeight() / 2);
-        }
-    else {
-        logo.sprite.SetX (0);
-        logo.sprite.SetY (0);
-        }
     stem.image = stem.origimage.Rotate(Math.Sin(rand/40)/20);
     stem.sprite.SetImage(stem.image);
     stem.sprite.SetX (100 + Math.Sin(Math.Sin(rand/40)/20) * stem.image.GetHeight());
@@ -154,85 +149,165 @@ Plymouth.SetRefreshFunction (refresh);
 
 #----------------------------------------- Dialogue --------------------------------
 
-status = "normal";
+mode = "normal";
 
 fun dialog_setup()
-  {
+{
+    local.caption;
     local.box;
     local.lock;
     local.entry;
-    
+    local.entrywide;
+    local.input;
+
+    caption.image = Image.Text("", 1, 1, 1);
     box.image = Image("box.png");
     lock.image = Image("lock.png");
     entry.image = Image("entry.png");
-    
-    box.sprite = Sprite(box.image);
+    entrywide.image = Image("entrywide.png");
+    input.image = Image.Text("", 0, 0, 0);
+
+    caption.x = Window.GetWidth() / 2;
+    caption.y = under_logo_y + box.image.GetHeight();
+    caption.z = 10000;
+    caption.sprite = Sprite(caption.image);
+    caption.sprite.SetPosition(caption.x, caption.y, caption.z);
+
     box.x = Window.GetWidth()  / 2 - box.image.GetWidth ()/2;
-    box.y = Window.GetHeight() / 2 - box.image.GetHeight()/2;
+    box.y = under_logo_y;
     box.z = 10000;
+    box.sprite = Sprite(box.image);
     box.sprite.SetPosition(box.x, box.y, box.z);
     
-    lock.sprite = Sprite(lock.image);
-    lock.x = box.x + box.image.GetWidth()/2 - (lock.image.GetWidth() + entry.image.GetWidth()) / 2;
+    local.margin = (box.image.GetWidth() -
+        lock.image.GetWidth() - entry.image.GetWidth()) / 4;
+
+    lock.x = box.x + margin;
     lock.y = box.y + box.image.GetHeight()/2 - lock.image.GetHeight()/2;
     lock.z = box.z + 1;
+    lock.sprite = Sprite(lock.image);
     lock.sprite.SetPosition(lock.x, lock.y, lock.z);
     
-    entry.sprite = Sprite(entry.image);
-    entry.x = lock.x + lock.image.GetWidth();
+    entry.x = lock.x + lock.image.GetWidth() + margin;
     entry.y = box.y + box.image.GetHeight()/2 - entry.image.GetHeight()/2;
     entry.z = box.z + 1;
+    entry.sprite = Sprite(entry.image);
     entry.sprite.SetPosition(entry.x, entry.y, entry.z);
     
+    entrywide.x = (window_width - entrywide.image.GetWidth()) / 2;
+    entrywide.y = entry.y;
+    entrywide.z = entry.z;
+    entrywide.sprite = Sprite(entrywide.image);
+    entrywide.sprite.SetPosition(entrywide.x, entrywide.y, entrywide.z);
+
+    input.x = entrywide.x + 2;
+    input.y = entrywide.y +
+        (entrywide.image.GetHeight() - input.image.GetHeight()) / 2;
+    input.z = entrywide.z + 1;
+    input.sprite = Sprite(input.image);
+    input.sprite.SetPosition(input.x, input.y, input.z);
+
+    global.dialog.caption = caption;
     global.dialog.box = box;
     global.dialog.lock = lock;
     global.dialog.entry = entry;
+    global.dialog.entrywide = entrywide;
     global.dialog.bullet_image = Image("bullet.png");
-    dialog_opacity (0);
-  }
-    
-fun dialog_opacity(opacity)
-  {
-    dialog.box.sprite.SetOpacity (opacity);
-    dialog.lock.sprite.SetOpacity (opacity);
-    dialog.entry.sprite.SetOpacity (opacity);
-    for (index = 0; dialog.bullet[index]; index++)
-      {
-        dialog.bullet[index].sprite.SetOpacity(opacity);
-      }
-  }
+    global.dialog.input = input;
+    hide_dialog();
+}
+
+fun hide_dialog()
+{
+    progress_box.sprite.SetOpacity(1);
+    progress_bar.sprite.SetOpacity(1);
+
+    dialog.caption.sprite.SetOpacity(0);
+    dialog.box.sprite.SetOpacity(0);
+    dialog.lock.sprite.SetOpacity(0);
+    dialog.entry.sprite.SetOpacity(0);
+    dialog.entrywide.sprite.SetOpacity(0);
+    dialog.bullet = [];
+    dialog.input.sprite.SetOpacity(0);
+}
+
+fun show_dialog(prompt, bullets, input)
+{
+    progress_box.sprite.SetOpacity(0);
+    progress_bar.sprite.SetOpacity(0);
+
+    dialog.caption.image = Image.Text(prompt || "", 1, 1, 1);
+    dialog.caption.sprite = Sprite(dialog.caption.image);
+    dialog.caption.x = (window_width - dialog.caption.image.GetWidth()) / 2;
+    dialog.caption.sprite.SetPosition(
+        dialog.caption.x, dialog.caption.y, dialog.caption.z);
+    dialog.caption.sprite.SetOpacity(1);
+
+    dialog.box.sprite.SetOpacity(1);
+    dialog.lock.sprite.SetOpacity(bullets >= 0);
+    dialog.entry.sprite.SetOpacity(bullets >= 0);
+    dialog.entrywide.sprite.SetOpacity(bullets < 0);
+
+    if (bullets >= 0)
+    {
+        for (local.i = 0; i < bullets; i++)
+        {
+            if (!dialog.bullet[i])
+            {
+                dialog.bullet[i].sprite = Sprite(dialog.bullet_image);
+                dialog.bullet[i].x = dialog.entry.x + 1 +
+                    i * (dialog.bullet_image.GetWidth() + 1);
+                dialog.bullet[i].y = dialog.entry.y +
+                    dialog.entry.image.GetHeight() / 2 -
+                    dialog.bullet_image.GetHeight() / 2;
+                dialog.bullet[i].z = dialog.entry.z + 1;
+                dialog.bullet[i].sprite.SetPosition(
+                    dialog.bullet[i].x, dialog.bullet[i].y, dialog.bullet[i].z);
+            }
+        }
+        while (dialog.bullet[i])
+        {
+            dialog.bullet[i++] = NULL; # Remove deleted bullet
+        }
+
+        dialog.input.sprite.SetOpacity(0);
+    }
+    else
+    {
+        dialog.bullet = [];
+
+        dialog.input.image = Image.Text(input || "", 0, 0, 0);
+        dialog.input.sprite = Sprite(dialog.input.image);
+        dialog.input.sprite.SetPosition(
+            dialog.input.x, dialog.input.y, dialog.input.z);
+        dialog.input.sprite.SetOpacity(1);
+    }
+
+}
 
 dialog_setup();
 
-fun display_normal_callback ()
-  {
-    global.status = "normal";
-    dialog_opacity (0);
-  }
+fun display_normal_callback()
+{
+    global.mode = "normal";
+    hide_dialog();
+}
 
-fun display_password_callback (prompt, bullets)
-  {
-    global.status = "password";
-    dialog_opacity(1);
-    for (index = 0; dialog.bullet[index] || index < bullets; index++)
-      {
-        if (!dialog.bullet[index])
-          {
-            dialog.bullet[index].sprite = Sprite(dialog.bullet_image);
-            dialog.bullet[index].x = dialog.entry.x + index * dialog.bullet_image.GetWidth();
-            dialog.bullet[index].y = dialog.entry.y + dialog.entry.image.GetHeight() / 2 - dialog.bullet_image.GetHeight() / 2;
-            dialog.bullet[index].z = dialog.entry.z + 1;
-            dialog.bullet[index].sprite.SetPosition(dialog.bullet[index].x, dialog.bullet[index].y, dialog.bullet[index].z);
-          }
-        if (index < bullets)
-          dialog.bullet[index].sprite.SetOpacity(1);
-        else
-          dialog.bullet[index].sprite.SetOpacity(0);
-      }
-  }
+fun display_password_callback(prompt, bullets)
+{
+    global.mode = "password";
+    show_dialog(prompt, bullets);
+}
+
+fun display_question_callback(prompt, input)
+{
+    global.mode = "question";
+    show_dialog(prompt, -1, input);
+}
 
 Plymouth.SetDisplayNormalFunction(display_normal_callback);
 Plymouth.SetDisplayPasswordFunction(display_password_callback);
+Plymouth.SetDisplayQuestionFunction(display_question_callback);
 
 #----------------------------------------- Progress Bar --------------------------------
 
@@ -240,14 +315,15 @@ progress_box.image = Image("progress_box.png");
 progress_box.sprite = Sprite(progress_box.image);
 
 progress_box.x = Window.GetWidth()  / 2 -    progress_box.image.GetWidth()  / 2;
-progress_box.y = Window.GetHeight() * 0.75 - progress_box.image.GetHeight() / 2;
+progress_box.y = under_logo_y;
 progress_box.sprite.SetPosition(progress_box.x, progress_box.y, 0);
 
 progress_bar.original_image = Image("progress_bar.png");
 progress_bar.sprite = Sprite();
 
 progress_bar.x = Window.GetWidth()  / 2 -        progress_bar.original_image.GetWidth() / 2;
-progress_bar.y = Window.GetHeight() / 2 * 1.5  - progress_box.image.GetHeight() / 2 + (progress_box.image.GetHeight() - progress_bar.original_image.GetHeight()) / 2;
+progress_bar.y = progress_box.y +
+    (progress_box.image.GetHeight() - progress_bar.original_image.GetHeight()) / 2;
 progress_bar.sprite.SetPosition(progress_bar.x, progress_bar.y, 1);
 
 fun progress_callback (duration, progress)
@@ -270,20 +346,19 @@ fun quit_callback ()
 
 Plymouth.SetQuitFunction(quit_callback);
 
-#----------------------------------------- Message --------------------------------
+#----------------------------------- Helpers -----------------------------------
 
 # Split a string at a delimiter character, with an optional split limit.
 # Return a dual-type value that is both a hash of substrings (hash keys start
 # at 0) and the number of substrings.
 # Inheritance is documented here:  http://brej.org/blog/?p=238
+# CharAt() and SubString() are undocumented, but present in plymouth.
 fun Split(str, delim, max)
 {
-    # CharAt() and SubString() are undocumented, but present in plymouth.
-
     local.parts = [];
     local.count = 0;
     local.start = 0;
-    for (local.i = 0; str.CharAt(i) != ""; i++)
+    for (local.i = 0; str.CharAt(i); i++)
     {
         if (max != NULL && count == max)
         {
@@ -300,8 +375,64 @@ fun Split(str, delim, max)
     return parts | count; # Return value inherits from both hash and number
 }
 
-window_xcenter = window_width / 2;
-messages_margin = fluff_image[0].GetHeight();
+# Join multiple strings with a delimiter.
+fun Join(parts, delim)
+{
+    local.text = "";
+    for (local.i = 0; parts[i]; i++)
+    {
+        if (text)
+        {
+            text = text + delim;
+        }
+        text = text + parts[i];
+    }
+    return text;
+}
+
+# Return the offset within str where substr appears, or -1 if it is not found.
+fun Find(str, substr)
+{
+    for (local.i = 0; str.CharAt(i); i++)
+    {
+        local.n = 0;
+        while (str.CharAt(i + n) && str.CharAt(i + n) == substr.CharAt(n))
+        {
+            n++;
+        }
+        if (!substr.CharAt(n))
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+# Return an integer from a string, or NULL on failure
+fun Int(str)
+{
+    local.val = 0;
+    local.scale = 1;
+
+    for (local.i = 0; (local.char = str.CharAt(i)) != ""; i++)
+    {
+        if (i == 0 && char == "-")
+        {
+            scale = -1;
+            continue;
+        }
+        local.digit = Find("0123456789", str.CharAt(i));
+        if (digit == -1)
+        {
+            return NULL;
+        }
+        val = val * 10 + digit;
+    }
+    return val * scale;
+}
+
+#---------------------------------- Messages -----------------------------------
+
 message_max_count = 5;
 message_sprites = [];
 
@@ -312,33 +443,147 @@ fun message_callback(text)
         return;
     }
 
-    # Parse message prefixes
-    # https://manpages.ubuntu.com/manpages/bionic/man8/systemd-fsckd.service.8.html#protocol%20for%20communication%20with%20plymouth
+    # Parse optional message prefix
     local.parts = Split(text, ":", 1);
+
+    # systemd-fsckd prepends "fsckd-cancel-msg:" to messages prompting for
+    # keyboard input.
     if (parts[0] == "fsckd-cancel-msg" && parts[1])
     {
         text = parts[1];
     }
+
+    # Ubuntu mountall prepends "keys:" to messages prompting for keyboard
+    # input, but first offers the user some context in a message sent just
+    # beforehand. (It is therefore a good thing we scroll messages instead
+    # of overwriting them.)
     if (parts[0] == "keys" && parts[1])
     {
         text = parts[1];
     }
 
-    # Scroll messages
+    # Scroll previous messages
     for(local.i = message_max_count - 1; i > 0; i--)
     {
         message_sprites[i] = message_sprites[i - 1];
         message_sprites[i].SetOpacity(0.75);
     }
-    message_sprites[0] = Sprite(Image.Text(text, 1, 1, 1));
+    message_sprites[0] = Sprite(
+        Image.Text(text, 1, 1, 1, null, null, "center"));
+
+    local.offset = window_height * 0.25 -
+        message_sprites[0].GetImage().GetHeight() * message_max_count;
 
     for(i = 0; i < message_max_count; i++)
     {
         message_sprites[i].SetPosition(
-            window_xcenter - message_sprites[i].GetImage().GetWidth() / 2,
-            window_height - i * message_sprites[i].GetImage().GetHeight() -
-            messages_margin);
+            (window_width - message_sprites[i].GetImage().GetWidth()) / 2,
+            window_height - offset - message_sprites[i].GetImage().GetHeight());
+        offset += message_sprites[i].GetImage().GetHeight();
     }
 }
 
 Plymouth.SetMessageFunction(message_callback);
+
+#----------------------------------------- fsck --------------------------------
+
+fsck_devs = [];     # ['devA', 'devB', ...]
+fsck_percents = []; # [0, 99, ...]
+fsck_lowpercent = NULL;
+
+# Update fsck_* with a device's new percent value
+fun _update_fsck_progress(dev, percent)
+{
+    fsck_lowpercent = percent;
+    local.foundcurrent = 0;
+    local.devs = [];
+    local.percents = [];
+    local.devcount = 0;
+    for (local.i = 0; fsck_devs[i]; i++)
+    {
+        if (fsck_devs[i] == dev)
+        {
+            foundcurrent = 1;
+            if (percent >= 100)
+            {
+                continue;
+            }
+            fsck_percents[i] = percent;
+        }
+        devs[devcount] = fsck_devs[i];
+        percents[devcount] = fsck_percents[i];
+        fsck_lowpercent = Math.Min(fsck_lowpercent, percents[devcount]);
+        devcount++;
+    }
+    if (!foundcurrent && percent < 100)
+    {
+        devs[devcount] = dev;
+        percents[devcount] = percent;
+    }
+    fsck_devs = devs;
+    fsck_percents = percents;
+}
+
+fun status_update_callback(text)
+{
+    # Parse message prefixes
+    local.parts = Split(text, ":");
+
+    # Ubuntu mountall (old versions) sends fsck status messages in this format:
+    #   fsck:<dev>:<percent>
+    # Ubuntu mountall (new versions) sends fsck status messages in this format:
+    #   fsck:<dev>:<percent>:<string-template>
+    # where <string-template> is "Checking disk %1$d of %2$d (%3$d%% complete)"
+    # or a localized equivalent.
+    #
+    # This newer format with string template came from Alberto Milone:
+    # https://bugs.launchpad.net/ubuntu/+source/plymouth/+bug/553954
+    # https://gitlab.freedesktop.org/CameronNemo/mountall/commit/58841bdf
+    #
+    # Unfortunately, this requires script themes to implement template
+    # processing in a language that has no built-in support for it.
+    # We therefore ignore such templates. If mountall wants to display
+    # localized text, it will have to expand its own templates.
+    #
+    if (parts[0] == "fsck" && parts[1])
+    {
+        _update_fsck_progress(parts[1], Int(parts[2]));
+
+        # Set fsck status text (ignoring mountall template strings)
+        if (parts[3] && Find(parts[3], "%1$d") == -1)
+        {
+            text = parts[3];
+        }
+        else
+        {
+            text = "Checking file system: ";
+            local.devstr = Join(fsck_devs, ", ");
+            if (devstr)
+            {
+                text += fsck_lowpercent + "%\n(" + devstr + ")";
+            }
+            else
+            {
+                text += "done.";
+            }
+        }
+    }
+
+    # systemd-fsckd.service sends status messages in this format:
+    #   fsckd:<num_devices>:<progress>:<string>
+    #
+    if (parts[0] == "fsckd" && parts[3])
+    {
+        text = parts[3];
+    }
+
+    local.image = Image.Text(text, 1, 1, 1, 0.75, null, "center");
+    global.status_sprite = Sprite(image);
+    global.status_sprite.SetPosition(
+        (window_width - image.GetWidth()) / 2,
+        window_height - image.GetHeight(),
+        1000);
+}
+
+
+Plymouth.SetUpdateStatusFunction(status_update_callback);
