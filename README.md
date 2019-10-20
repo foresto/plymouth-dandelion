@@ -4,8 +4,8 @@ An animated theme for the Plymouth graphical boot system.
 
 [![Dandelion screenshot](screenshot.png)](http://brej.org/blog/wp-content/uploads/2009/12/dandelion.ogg)
 
-Note: The pictured logo is just a placeholder. In practice, the logo from
-your linux distribution's plymouth package will be displayed instead.
+The pictured logo is just a placeholder. In practice, the logo from
+your linux distribution will be displayed instead.
 
 # Installation
 
@@ -41,7 +41,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 # History
 
 This theme was created by [Charlie Brej](mailto:plymouth@brej.org) as
-a test example for his Plymouth script interpreter, and
+an example for his Plymouth script language, and
 [published](http://brej.org/blog/wp-content/uploads/2009/12/dandelion.tar.gz)
 in a [2009 blog post](http://brej.org/blog/?p=238).
 
