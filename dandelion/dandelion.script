@@ -188,7 +188,7 @@ fun dialog_setup()
     global.dialog.lock = lock;
     global.dialog.entry = entry;
     global.dialog.bullet_image = Image("bullet.png");
-    dialog_opacity (1);
+    dialog_opacity (0);
   }
     
 fun dialog_opacity(opacity)
@@ -202,20 +202,18 @@ fun dialog_opacity(opacity)
       }
   }
 
+dialog_setup();
+
 fun display_normal_callback ()
   {
     global.status = "normal";
-    if (global.dialog)
-      dialog_opacity (0);
+    dialog_opacity (0);
   }
 
 fun display_password_callback (prompt, bullets)
   {
     global.status = "password";
-    if (!global.dialog)
-	dialog_setup();
-    else
-	dialog_opacity(1);
+    dialog_opacity(1);
     for (index = 0; dialog.bullet[index] || index < bullets; index++)
       {
         if (!dialog.bullet[index])
