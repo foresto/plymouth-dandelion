@@ -1,9 +1,11 @@
 # Dandelion
 
-A theme for the Plymouth graphical boot system for linux.
+An animated theme for the Plymouth graphical boot system.
 
 [![Dandelion screenshot](screenshot.png)](http://brej.org/blog/wp-content/uploads/2009/12/dandelion.ogg)
 
+Note: The pictured logo is just a placeholder. In practice, the logo from
+your linux distribution's plymouth package will be displayed instead.
 
 # Installation
 
