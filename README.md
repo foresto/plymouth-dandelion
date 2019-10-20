@@ -5,6 +5,19 @@ A theme for the Plymouth graphical boot system for linux.
 [![Dandelion screenshot](screenshot.png)](http://brej.org/blog/wp-content/uploads/2009/12/dandelion.ogg)
 
 
+# Installation
+
+To install without a package manager, copy the dandelion subdirectory
+into your system's /usr/share/plymouth/themes directory, and then run
+these commands:
+
+    sudo update-alternatives --install \
+      /usr/share/plymouth/themes/default.plymouth default.plymouth \
+      /usr/share/plymouth/themes/dandelion/dandelion.plymouth 100
+    sudo update-alternatives --config default.plymouth
+    sudo update-initramfs -u
+
+
 # License
 
 Copyright 2009-2019 Charles Brej and contributors
