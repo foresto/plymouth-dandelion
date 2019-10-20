@@ -272,13 +272,73 @@ Plymouth.SetQuitFunction(quit_callback);
 
 #----------------------------------------- Message --------------------------------
 
-message_sprite = Sprite();
-message_sprite.SetPosition(10, 10, 10000);
-
-fun message_callback (text)
+# Split a string at a delimiter character, with an optional split limit.
+# Return a dual-type value that is both a hash of substrings (hash keys start
+# at 0) and the number of substrings.
+# Inheritance is documented here:  http://brej.org/blog/?p=238
+fun Split(str, delim, max)
 {
-  my_image = Image.Text(text, 1, 1, 1);
-  message_sprite.SetImage(my_image);
+    # CharAt() and SubString() are undocumented, but present in plymouth.
+
+    local.parts = [];
+    local.count = 0;
+    local.start = 0;
+    for (local.i = 0; str.CharAt(i) != ""; i++)
+    {
+        if (max != NULL && count == max)
+        {
+            continue;
+        }
+        if (str.CharAt(i) == delim)
+        {
+            parts[count++] = str.SubString(start, i);
+            start = i + 1;
+        }
+    }
+    parts[count++] = str.SubString(start, i);
+
+    return parts | count; # Return value inherits from both hash and number
+}
+
+window_xcenter = window_width / 2;
+messages_margin = fluff_image[0].GetHeight();
+message_max_count = 5;
+message_sprites = [];
+
+fun message_callback(text)
+{
+    if (!text)
+    {
+        return;
+    }
+
+    # Parse message prefixes
+    # https://manpages.ubuntu.com/manpages/bionic/man8/systemd-fsckd.service.8.html#protocol%20for%20communication%20with%20plymouth
+    local.parts = Split(text, ":", 1);
+    if (parts[0] == "fsckd-cancel-msg" && parts[1])
+    {
+        text = parts[1];
+    }
+    if (parts[0] == "keys" && parts[1])
+    {
+        text = parts[1];
+    }
+
+    # Scroll messages
+    for(local.i = message_max_count - 1; i > 0; i--)
+    {
+        message_sprites[i] = message_sprites[i - 1];
+        message_sprites[i].SetOpacity(0.75);
+    }
+    message_sprites[0] = Sprite(Image.Text(text, 1, 1, 1));
+
+    for(i = 0; i < message_max_count; i++)
+    {
+        message_sprites[i].SetPosition(
+            window_xcenter - message_sprites[i].GetImage().GetWidth() / 2,
+            window_height - i * message_sprites[i].GetImage().GetHeight() -
+            messages_margin);
+    }
 }
 
 Plymouth.SetMessageFunction(message_callback);
