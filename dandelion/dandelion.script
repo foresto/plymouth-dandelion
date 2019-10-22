@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 Window.SetBackgroundTopColor(0.234, 0.43, 0.705);
 Window.SetBackgroundBottomColor(0.16, 0.25, 0.44);
 
-cache_rotate = fun(image_index, angle)
+fun cache_rotate(image_index, angle)
     {
     angle += (Math.Pi * 2) * 32;
     angle %= Math.Pi * 2;
@@ -296,7 +296,7 @@ fun show_dialog(prompt, bullets, input)
             }
         while (dialog.bullet[i])
             {
-            dialog.bullet[i++] = NULL;  # Remove deleted bullet
+            dialog.bullet[i++] = NULL;  # Remove leftover bullets
             }
 
         dialog.input.sprite.SetOpacity(0);
