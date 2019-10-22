@@ -456,7 +456,7 @@ fun message_callback(text)
     # Ubuntu mountall prepends "keys:" to messages prompting for keyboard
     # input, but first offers the user some context in a message sent just
     # beforehand. (It is therefore a good thing we scroll messages instead
-    # of overwriting them.)
+    # of letting each new one overwrite the previous one.)
     if (parts[0] == "keys" && parts[1])
     {
         text = parts[1];
