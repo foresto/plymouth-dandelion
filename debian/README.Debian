@@ -1,0 +1,23 @@
+Plymouth Dandelion theme for Debian
+-----------------------------------
+
+Once this package is installed, the theme must be activated, both in
+the root filesystem and the ramdisk used to boot the system.
+These commands accomplish both:
+
+sudo update-alternatives --set default.plymouth \
+    /usr/share/plymouth/themes/dandelion/dandelion.plymouth
+sudo /usr/sbin/plymouth-set-default-theme dandelion
+sudo update-initramfs -u
+
+Your linux distribution may not have or need both update-alternatives and
+plymouth-set-default-theme.  Use whichever is available on your system.
+
+If your system does not display a plymouth theme at the next reboot, you
+my need to enable graphical boot by configuring the following variables
+in /etc/default/grub:
+
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"
+GRUB_GFXMODE=800x600  # (or another supported resolution)
+
+...and then running sudo update-grub2
