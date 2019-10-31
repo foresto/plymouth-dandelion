@@ -17,8 +17,11 @@ these commands:
       /usr/share/plymouth/themes/default.plymouth default.plymouth \
       /usr/share/plymouth/themes/dandelion/dandelion.plymouth 100
     sudo update-alternatives --config default.plymouth
+    sudo plymouth-set-default-theme dandelion
     sudo update-initramfs -u
 
+Your linux distribution may not have or need both update-alternatives and
+plymouth-set-default-theme.  Use whichever is available on your system.
 
 # License
 
